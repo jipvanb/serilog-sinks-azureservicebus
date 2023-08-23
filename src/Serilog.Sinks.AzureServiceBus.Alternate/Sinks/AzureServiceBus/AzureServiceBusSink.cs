@@ -1,4 +1,4 @@
-using Microsoft.Azure.ServiceBus;
+using Azure.Messaging.ServiceBus;
 using Serilog.Core;
 using Serilog.Events;
 using System;
@@ -13,14 +13,14 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
     public class AzureServiceBusSink : ILogEventSink
     {
         readonly int _waitTimeoutInMilliseconds = Timeout.Infinite;
-        readonly IQueueClient _queueClient;
+        readonly ServiceBusSender _serviceBusSender;
         readonly IFormatProvider _formatProvider;
 
         public AzureServiceBusSink(
-            IQueueClient queueClient,
+            ServiceBusSender serviceBusSender,
             IFormatProvider formatProvider)
         {
-            _queueClient = queueClient;
+            _serviceBusSender = serviceBusSender;
             _formatProvider = formatProvider;
         }
 
@@ -30,8 +30,11 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
         /// <param name="logEvent">The log event to write.</param>
         public void Emit(LogEvent logEvent)
         {
-            var message = new Message(Encoding.UTF8.GetBytes(logEvent.RenderMessage(_formatProvider)));
-            _queueClient.SendAsync(message).Wait(_waitTimeoutInMilliseconds);
+
+            var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(logEvent.RenderMessage(_formatProvider)));
+            message.ApplicationProperties.Add("MessageType", "http://schemas.ores.be/eiam/messages/event/1.0#MessageReceivedEvent");
+
+            _serviceBusSender.SendMessageAsync(message).Wait(_waitTimeoutInMilliseconds);
         }    
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Azure.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
 using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
@@ -22,8 +22,8 @@ namespace Serilog
 
             try
             {
-                QueueClient client = new QueueClient(serviceBusConnectionString, queueName);
-                return loggerConfiguration.Sink(new AzureServiceBusSink(client, formatProvider), restrictedToMinimumLevel);
+                var client = new ServiceBusClient(serviceBusConnectionString);
+                return loggerConfiguration.Sink(new AzureServiceBusSink(client.CreateSender(queueName), formatProvider), restrictedToMinimumLevel);
             }
             catch (Exception ex)
             {
