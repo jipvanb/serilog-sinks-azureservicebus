@@ -2,6 +2,7 @@ using Azure.Messaging.ServiceBus;
 using Serilog.Core;
 using Serilog.Events;
 using System;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -32,7 +33,12 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
         {
 
             var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(logEvent.RenderMessage(_formatProvider)));
-            message.ApplicationProperties.Add("MessageType", "http://schemas.ores.be/eiam/messages/event/1.0#MessageReceivedEvent");
+
+            foreach (var logEventPropertyValue in logEvent.Properties)
+            {
+                message.ApplicationProperties.Add(logEventPropertyValue.Key, logEventPropertyValue.Value.ToString().Trim('"'));
+            }
+
 
             _serviceBusSender.SendMessageAsync(message).Wait(_waitTimeoutInMilliseconds);
         }    
