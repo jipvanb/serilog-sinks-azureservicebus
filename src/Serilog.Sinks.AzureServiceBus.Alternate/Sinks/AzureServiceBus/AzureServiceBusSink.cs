@@ -16,6 +16,7 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
         readonly int _waitTimeoutInMilliseconds = Timeout.Infinite;
         readonly ServiceBusSender _serviceBusSender;
         readonly IFormatProvider _formatProvider;
+        //private const string TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fff";
 
         public AzureServiceBusSink(
             ServiceBusSender serviceBusSender,
@@ -31,7 +32,6 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
         /// <param name="logEvent">The log event to write.</param>
         public void Emit(LogEvent logEvent)
         {
-
             var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(logEvent.RenderMessage(_formatProvider)));
 
             foreach (var logEventPropertyValue in logEvent.Properties)
@@ -39,6 +39,7 @@ namespace Serilog.Sinks.AzureServiceBus.Alternate
                 message.ApplicationProperties.Add(logEventPropertyValue.Key, logEventPropertyValue.Value.ToString().Trim('"'));
             }
 
+            message.ApplicationProperties.Add("Timestamp", logEvent.Timestamp.ToUniversalTime());
 
             _serviceBusSender.SendMessageAsync(message).Wait(_waitTimeoutInMilliseconds);
         }    
